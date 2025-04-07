@@ -9,13 +9,14 @@ Hand crafted with some libraries like
 
 ## Features
 
-- Configuration through JSON \[done\]
-- CLI override of configuration \[done\]
-- Logging to file \[done\]
-- Togglable GZIP or ~~BROTLI~~ compression \[done\]
+- [x] Configuration through JSON
+- [x] CLI override of configuration
+- [x] Logging to file
+- [x] Togglable GZIP or ~~BROTLI~~ compression
   (BROTLI is not supported by libh2o)
-- HTTPS support \[done\]
-- Easy endpoint creation \[done\]
+- [x] HTTPS support
+- [x] Easy endpoint creation
+- [ ]  Custom error pages (Maintaining this project will be paused 'til I can figure out how to do this)
 
 ## Building
 
