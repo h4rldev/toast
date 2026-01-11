@@ -1,24 +1,24 @@
 /*
- * NOTE: This is a template for the config file and it's not meant to be used as is. 
+ * NOTE: This is a template for the config file and it's not meant to be used as is.
  * NOTE: Neither is the actual config meant to be a jsonc file.
- * NOTE: The real config file is generated automatically when you run the program for the first time. 
+ * NOTE: The real config file is generated automatically when you run the program for the first time.
  */
 {
-  "site_root": "site/", // path to the site root (default site/), can be absolute or relative to the executable
-  "log_type": "both", // log to file, console or both (default both)
+  "site_root": "site/", // path to the site root, can be absolute or relative to the executable
+  "log_type": "both", // log to file, console or both
   "network": {
-    "ip": "127.0.0.1", // ip to listen to (default 127.0.0.1/localhost/loopback)
-    "port": 8080 // port to listen to (default 8080)
+    "ip": "127.0.0.1", // ip to listen to
+    "port": 8080 // port to listen to
   },
   "compression": {
-    "enabled": true, // enable compression (gzip) (default true)
-    "quality": 6, // gzip quality (default 6, min 1, max 9)
-    "min_size": 150 // min size to compress (default/recommended minimum 150 bytes)
+    "enabled": true, // enable compression (gzip)
+    "quality": 6, // gzip quality (min 1, max 9)
+    "min_size": 150 // min size to compress (recommended minimum 150 bytes)
   },
   "ssl": {
-    "enabled": false, // enable tls (name kept for recognition) (default false)
-    "mem_cached": false, // use memcached for ssl session resumption (default false)
-    "cert_path": "", // path to certificate file (default "")
-    "key_path": "" // path to private key file (default "")
+    "enabled": false, // enable tls (name kept for recognition)
+    "mem_cached": false, // use memcached for ssl session resumption
+    "cert_path": "", // path to certificate file
+    "key_path": "" // path to private key file
   }
 }

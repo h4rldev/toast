@@ -18,10 +18,15 @@
 - libcap
 - wslay (probably not required for building but it's there if you want to use websockets)
 
+### clangd
+
+- a CC
+- bear
+
 ### Building libH2O
 
 ```bash
-just build-libh2o
+just ensure_h2o
 ```
 
 ### Building toast
@@ -30,22 +35,16 @@ just build-libh2o
 just build
 ```
 
-### Building all
-
-```bash
-just build-all
-```
-
 ## Running
 
 ```bash
-./toast or ./toast -h for help
+./bin/toast or ./bin/toast -h for help
 ```
 
 ## Generating a local compilation database for clangd
 
 ```bash
-just generate-compilation-database
+just bear
 ```
 
 ## Developing guide
@@ -63,6 +62,5 @@ just generate-compilation-database
 
 ### Write your own code
 
-Feel free to clone this and use it as a good base for your backend, it has a restrictive license but you are still free to use it as a base for your own projects as long as it's license is respected.
-It should have no issues with using database connections, websockets and so on, but this project by itself is not meant for websockets.
+Feel free to clone this and use it as a good base for your backend it should have no issues with using database connections, websockets and so on, but this project by itself is not meant for websockets.
 If you want to use websockets anyway, check out the websocket example in libh2o's [examples](https://github.com/h2o/h2o/tree/master/examples/libh2o).
