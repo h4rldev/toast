@@ -154,10 +154,75 @@ static int get_year(void) {
   return time->tm_year + 1900;
 }
 
+static int not_found(h2o_handler_t *handler, h2o_req_t *req) {
+  h2o_generator_t generator = {NULL, NULL};
+
+  char path_buffer[1024];
+
+  Config server_config;
+  read_config(&server_config);
+  char *path = req->path.base;
+  strlcpy(path_buffer, server_config.site_root, 1024);
+  free_config(&server_config);
+
+  path_buffer[strlen(path_buffer) - 1] = '\0';
+  strlcat(path_buffer, path, 1024);
+
+  strlcpy(path_buffer, strtok(path_buffer, " "), 1024);
+  strlcat(path_buffer, "index.html", 1024);
+
+  printf("path_buffer: %s\n", path_buffer);
+
+  if (path_exist(path_buffer) != true) {
+    return -1;
+  }
+
+  char *html_buffer = malloc(1024);
+
+  sprintf(html_buffer,
+          "<title>Error 404</title>"
+          "<style>"
+          "body{font-family: sans-serif;}"
+          "h1{font-size: 1.5em;}"
+          "p{font-size: 1em; margin-bottom: 0.5em;}"
+          "sub{font-size: 0.7em;}"
+          "</style>"
+          "<h1>Error 404</h1>"
+          "<p>Not found</p>"
+          "<sub><a href=\"https://git.enstore.cloud/enstore.cloud/toast\" "
+          "target=\"_blank\">toast</a>, %d</sub>",
+          get_year());
+
+  h2o_iovec_t body = h2o_strdup(&req->pool, html_buffer, strlen(html_buffer));
+  free(html_buffer);
+
+  req->res.status = 404;
+  req->res.reason = "Not Found";
+  h2o_add_header(&req->pool, &req->res.headers, H2O_TOKEN_CONTENT_TYPE, NULL,
+                 H2O_STRLIT("text/html; charset=utf-8"));
+  h2o_start_response(req, &generator);
+  h2o_send(req, &body, 1, 1);
+
+  return 0;
+}
+
 static int get_index(h2o_handler_t *handler, h2o_req_t *req) {
   h2o_generator_t generator = {NULL, NULL};
 
   char *html_buffer = malloc(1024);
+  sprintf(html_buffer,
+          "<title>welcome to toast!</title>"
+          "<style>"
+          "body{font-family: sans-serif;}"
+          "h1{font-size: 1.5em;}"
+          "p{font-size: 1em; margin-bottom: 0.5em;}"
+          "sub{font-size: 0.7em;}"
+          "</style>"
+          "<h1>error 404</h1>"
+          "<p>not found</p>"
+          "<sub><a href=\"https://git.enstore.cloud/enstore.cloud/toast\" "
+          "target=\"_blank\">toast</a>, %d</sub>",
+          get_year());
   sprintf(html_buffer,
           "<title>Welcome to toast!</title>"
           "<style>"
@@ -172,12 +237,12 @@ static int get_index(h2o_handler_t *handler, h2o_req_t *req) {
           "<sub><a href=\"https://git.enstore.cloud/enstore.cloud/toast\" "
           "target=\"_blank\">toast</a>, %d</sub>",
           get_year());
+  req->res.status = 200;
+  req->res.reason = "OK";
 
   h2o_iovec_t body = h2o_strdup(&req->pool, html_buffer, strlen(html_buffer));
   free(html_buffer);
 
-  req->res.status = 200;
-  req->res.reason = "OK";
   h2o_add_header(&req->pool, &req->res.headers, H2O_TOKEN_CONTENT_TYPE, NULL,
                  H2O_STRLIT("text/html; charset=utf-8"));
   h2o_start_response(req, &generator);
@@ -187,13 +252,18 @@ static int get_index(h2o_handler_t *handler, h2o_req_t *req) {
 }
 
 int main(int argc, char **argv) {
-  Config server_config;
+  Config server_config = {0};
+  char index_path[1024];
 
   time_t time_container = time(NULL);
   struct tm *time = localtime(&time_container);
   char log_fname[28] = {0};
 
   uv_loop_t loop;
+  h2o_access_log_filehandle_t *log2file = NULL;
+  h2o_access_log_filehandle_t *logfh = NULL;
+  h2o_hostconf_t *hostconf = NULL;
+  h2o_pathconf_t *pathconf = NULL;
 
   snprintf(log_fname, 28, "./logs/toast-%d-%02d-%02d.log", time->tm_year + 1900,
            time->tm_mon + 1, time->tm_mday);
@@ -202,9 +272,6 @@ int main(int argc, char **argv) {
     init_config(&server_config);
     write_config(&server_config);
   }
-
-  h2o_access_log_filehandle_t *log2file = NULL;
-  h2o_access_log_filehandle_t *logfh = NULL;
 
   switch (server_config.log_type) {
   case Both:
@@ -228,9 +295,6 @@ int main(int argc, char **argv) {
     break;
   }
 
-  h2o_hostconf_t *hostconf;
-  h2o_pathconf_t *pathconf;
-
   signal(SIGPIPE, SIG_IGN);
 
   if (parse_args(&argc, &argv, &server_config) != 0) {
@@ -247,52 +311,57 @@ int main(int argc, char **argv) {
 
 #ifdef API_H_IMPLEMENTATION
   pathconf = register_handler(hostconf, "/api/serverinfo", get_server_info);
-  if (logfh != NULL)
+  if (logfh)
     h2o_access_log_register(pathconf, logfh);
 
-  if (log2file != NULL)
+  if (log2file)
     h2o_access_log_register(pathconf, log2file);
 
   pathconf = register_handler(hostconf, "/api/uptime", get_uptime);
-  if (logfh != NULL)
+  if (logfh)
     h2o_access_log_register(pathconf, logfh);
 
-  if (log2file != NULL)
+  if (log2file)
     h2o_access_log_register(pathconf, log2file);
 
   pathconf = register_handler(hostconf, "/api/cv", get_cv);
-  if (logfh != NULL)
+  if (logfh)
     h2o_access_log_register(pathconf, logfh);
 
-  if (log2file != NULL)
+  if (log2file)
     h2o_access_log_register(pathconf, log2file);
 #endif
-  char *index_path = malloc(1024);
   sprintf(index_path, "%s/index.html", server_config.site_root);
 
   if (path_exist(index_path) == false) {
     pathconf = register_handler(hostconf, "/", get_index);
-    if (logfh != NULL)
+    if (logfh)
       h2o_access_log_register(pathconf, logfh);
-    if (log2file != NULL)
+    if (log2file)
       h2o_access_log_register(pathconf, log2file);
   } else {
     pathconf = h2o_config_register_path(hostconf, "/", 0);
     h2o_file_register(pathconf, server_config.site_root, NULL, NULL, 0);
-    if (logfh != NULL)
+    if (logfh)
       h2o_access_log_register(pathconf, logfh);
 
-    if (log2file != NULL)
+    if (log2file)
       h2o_access_log_register(pathconf, log2file);
   }
 
-  free(index_path);
+  pathconf = register_handler(hostconf, "/", not_found);
+  if (logfh)
+    h2o_access_log_register(pathconf, logfh);
+
+  if (log2file)
+    h2o_access_log_register(pathconf, log2file);
 
   if (server_config.compression.enabled == false)
     goto NotCompress;
 
-  h2o_compress_args_t ca;
-  ca.gzip.quality = server_config.compression.quality;
+  h2o_compress_args_t ca = {
+      .gzip.quality = server_config.compression.quality,
+  };
 
   if (server_config.compression.min_size != 0)
     ca.min_size = server_config.compression.min_size;
@@ -325,7 +394,7 @@ NotCompress:
 
   if (create_listener(server_config.network.ip, server_config.network.port) !=
       0) {
-    fprintf(stderr, "failed to listen to 127.0.0.1:%u:%s\n",
+    fprintf(stderr, "failed to listen to %s:%u:%s\n", server_config.network.ip,
             server_config.network.port, strerror(errno));
     goto Error;
   }
@@ -337,5 +406,6 @@ NotCompress:
   uv_run(ctx.loop, UV_RUN_DEFAULT);
 
 Error:
+  free_config(&server_config);
   return -1;
 }

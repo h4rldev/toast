@@ -4,21 +4,25 @@
 }:
 with pkgs;
   mkShell {
-    packages = [
+    buildInputs = [
       cmake
       jansson
       zlib
       libuv
       openssl
       pkg-config
+      brotli
+      wslay
+      libcap
+    ];
+
+    packages = [
       file
       bear
       gcc
       clang-tools
-      wslay
-      brotli
-      libcap
       valgrind
+      just
     ];
 
     shellHook = ''
