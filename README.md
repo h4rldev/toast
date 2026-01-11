@@ -38,8 +38,10 @@ Hand crafted with some libraries like
 
 ### Building libH2O
 
+(Done automatically when missing)
+
 ```bash
-just build-libh2o
+just ensure_h2o
 ```
 
 ### Building toast
@@ -48,21 +50,15 @@ just build-libh2o
 just build
 ```
 
-### Building all
-
-```bash
-just build-all
-```
-
 ### Running
 
 ```bash
-./toast or ./toast -h for help
+./bin/toast or ./bin/toast -h for help
 ```
 
 ## License
 
-This project is licensed under the [AGPL-3.0](./LICENSE) license.
+This project is licensed under the [BSD 3-Clause](./LICENSE) license.
 
 ## Contributing
 
